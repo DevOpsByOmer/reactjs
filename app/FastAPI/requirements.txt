@@ -1,0 +1,18 @@
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+
+# Prometheus metrics
+prometheus-fastapi-instrumentator==6.1.0
+
+# OpenTelemetry (aligned to 1.25.0 + 0.46b0)
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+opentelemetry-exporter-otlp==1.25.0
+opentelemetry-instrumentation==0.46b0
+opentelemetry-instrumentation-fastapi==0.46b0
+opentelemetry-instrumentation-requests==0.46b0
+opentelemetry-instrumentation-urllib==0.46b0
+opentelemetry-semantic-conventions==0.46b0
+
+# Dependencies
+requests==2.31.0

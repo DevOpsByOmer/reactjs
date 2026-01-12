@@ -1,0 +1,25 @@
+name: Build & Push Docker image
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - project1
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: code checkout
+              uses: actions/checkout@v4
+
+            - name: Code Build
+              uses: actions/setup-node@v4
+              with:
+                node-version: 14
+            - name: Dependencies
+              run: npm install
+
+              
+
+            
