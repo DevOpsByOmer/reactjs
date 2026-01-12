@@ -3,7 +3,10 @@ on:
     workflow_dispatch:
     push:
         branches:
-            - project1
+            - main
+            - master
+env:
+  APP_DIR: app/react-app/
 
 jobs:
     build:

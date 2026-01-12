@@ -12,6 +12,12 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+     APP_DIR: app/react-app/
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.APP_DIR}}
 
     steps:
     - uses: actions/checkout@v4
