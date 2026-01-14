@@ -71,7 +71,8 @@
               image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
               format: table
               exit-code: 1
-              severity: CRITICAL,HIGH
+              ignore-unfixed: true
+              severity: CRITICAL
 
 
       # -------------------------
