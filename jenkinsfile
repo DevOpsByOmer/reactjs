@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR    = "app/FastAPI"
+        IMAGE_NAME = "fast-api"
+        IMAGE_TAG  = "${env.GIT_COMMIT}"
+        DOCKERHUB_CREDS = credentials('dockerhub-creds')
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${APP_DIR}") {
+                    sh """
+                      docker build \
+                        -t ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:latest \
+                        -t ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:${IMAGE_TAG} .
+                    """
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh """
+                  echo "${DOCKERHUB_CREDS_PSW}" | docker login \
+                    -u "${DOCKERHUB_CREDS_USR}" --password-stdin
+
+                  docker push ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:latest
+                  docker push ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+        success {
+            echo "Image pushed successfully"
+        }
+        failure {
+            echo "Pipeline failed"
+        }
+    }
+}
