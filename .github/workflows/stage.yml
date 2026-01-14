@@ -1,7 +1,10 @@
   name: FastAPI 
   on:
+    push:
+      branches:
+        - main
       
-      workflow_dispatch:
+    workflow_dispatch:
 
   jobs:
       Image_build:
