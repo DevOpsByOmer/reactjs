@@ -10,6 +10,7 @@
           env:
               APP_DIR: app/FastAPI/
               IMAGE_NAME: fast-api
+              
           
           defaults:
               run:
@@ -19,16 +20,38 @@
 
           - name: Code CheckOut
             uses: actions/checkout@v4
+            with:
+             fetch-depth: 0
+      # -------------------------
+      # SonarCloud Scan
+      # -------------------------
+          - name: sonnar Qube scanner
+            uses:  SonarSource/sonarqube-scan-action@v4
+            env:
+              SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              SONAR_HOST_URL: https://sonarcloud.io
+            with:
+             args: >
+              -Dsonar.organization=devopsbyomer
+              -Dsonar.projectKey=DevOpsByOmer_reactjs
+      # -------------------------
+      # Image Tagging
+      # -------------------------
           
           - name: Set Image Tag
             run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+      # -------------------------
+      # Docker Login
+      # -------------------------
           - name: DockerHub Login
             uses: docker/login-action@v3
             with:
               
               username: ${{secrets.DOCKERHUB_USERNAME}}
               password: ${{secrets.DOCKERHUB_TOKEN}}
-
+      # -------------------------
+      # Image Building
+      # -------------------------
           
           - name: Build Docker image
             run: |
@@ -36,7 +59,20 @@
                 -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
                 -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
                           
+      # -------------------------
+      # Trivy Image Scanning
+      # -------------------------
+          - name: Trivy Docker Image Scanning
+            uses: aquasecurity/trivy-action@0.20.0
+            with:
+              image-ref: ${{secrets.DOCKERHUB_USERNAME}}//${{env.IMAGE_NAME}}:latest
+              format: table
+              exit-code: 1
+              severity: CRIRICAL,HIGH
 
+      # -------------------------
+      # Image Puching TO dOCKER hub
+      # -------------------------
           - name: Push Docker image
             run: |
               docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
