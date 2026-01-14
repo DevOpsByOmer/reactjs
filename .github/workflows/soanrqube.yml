@@ -27,12 +27,6 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
-            -Dsonar.organization=devopsbyomer
+            -Dsonar.organization=OmerMohammed
             -Dsonar.projectKey=DevOpsByOmer_reactjs
-            -Dsonar.python.version=3.10
-
-      - name: SonarCloud Quality Gate
-        uses: SonarSource/sonarqube-scan-action@v4
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+         
