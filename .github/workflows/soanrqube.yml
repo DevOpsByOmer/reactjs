@@ -31,7 +31,7 @@ jobs:
             -Dsonar.python.version=3.10
 
       - name: SonarCloud Quality Gate
-        uses: SonarSource/sonarcloud-quality-gate-action@v1
+        uses: SonarSource/sonarqube-scan-action@v4
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
