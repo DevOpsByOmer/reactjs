@@ -65,13 +65,14 @@
       # -------------------------
       # Trivy Image Scanning
       # -------------------------
-          - name: Trivy Docker Image Scanning
+          - name: Trivy Scan (Fail on CRITICAL/HIGH)
             uses: aquasecurity/trivy-action@0.20.0
             with:
-              image-ref: ${{secrets.DOCKERHUB_USERNAME}}//${{env.IMAGE_NAME}}:latest
+              image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
               format: table
               exit-code: 1
-              severity: CRIRICAL,HIGH
+              severity: CRITICAL,HIGH
+
 
       # -------------------------
       # Image Puching TO dOCKER hub
