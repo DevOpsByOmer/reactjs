@@ -26,7 +26,7 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
-            -Dsonar.organization=OmerMohammed
+            -Dsonar.organization=devopsbyomer
             -Dsonar.projectKey=DevOpsByOmer_reactjs
             -Dsonar.python.version=3.10
 
