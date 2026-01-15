@@ -6,6 +6,8 @@ pipeline {
         IMAGE_NAME = "fast-api"
         IMAGE_TAG  = "${env.GIT_COMMIT}"
         DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        SONAR_TOKEN = credentials('sonar-token')
+        REGISTRY   = "docker.io"
     }
 
     stages {
@@ -13,6 +15,17 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+        stage('SonarCloud Scan') {
+            steps {
+                sh '''
+                  sonar-scanner \
+                    -Dsonar.projectKey=DevOpsByOmer_reactjs \
+                    -Dsonar.organization=devopsbyomer \
+                    -Dsonar.host.url=https://sonarcloud.io \
+                    -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
 
@@ -25,6 +38,16 @@ pipeline {
                         -t ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:${IMAGE_TAG} .
                     """
                 }
+            }
+        }
+         stage('Trivy Scan') {
+            steps {
+                sh '''
+                  trivy image \
+                    --exit-code 1 \
+                    --severity CRITICAL \
+                    $DOCKERHUB_USER/$IMAGE_NAME:latest
+                '''
             }
         }
 
