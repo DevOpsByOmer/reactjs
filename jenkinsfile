@@ -48,24 +48,19 @@ pipeline {
                 }
             }
         }
-
         stage('Trivy Scan') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )]) {
-                    sh '''
-                      trivy image \
-                        --exit-code 1 \
-                        --severity CRITICAL,HIGH \
-                        $DOCKERHUB_USER/$IMAGE_NAME:latest
-                    '''
-                }
-            }
-        }
-
+        steps {
+         sh '''
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest \
+            image \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:latest
+        '''
+    }
+}
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
