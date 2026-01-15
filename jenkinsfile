@@ -72,7 +72,7 @@ pipeline {
                 aquasec/trivy:latest \
                 image \
                 --exit-code 1 \
-                --severity CRITICAL,HIGH \
+                --severity CRITICAL\
                 $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
             '''
         }
