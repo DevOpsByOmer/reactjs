@@ -5,9 +5,6 @@ pipeline {
         APP_DIR    = "app/FastAPI"
         IMAGE_NAME = "fast-api"
         IMAGE_TAG  = "${env.GIT_COMMIT}"
-        DOCKERHUB_CREDS = credentials('dockerhub-creds')
-        SONAR_TOKEN = credentials('sonar-token')
-        REGISTRY   = "docker.io"
     }
 
     stages {
@@ -17,49 +14,73 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('SonarCloud Scan') {
             steps {
-                sh '''
-                  sonar-scanner \
-                    -Dsonar.projectKey=DevOpsByOmer_reactjs \
-                    -Dsonar.organization=devopsbyomer \
-                    -Dsonar.host.url=https://sonarcloud.io \
-                    -Dsonar.login=$SONAR_TOKEN
-                '''
+                dir("${APP_DIR}") {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                          sonar-scanner \
+                            -Dsonar.projectKey=DevOpsByOmer_reactjs \
+                            -Dsonar.organization=devopsbyomer \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 dir("${APP_DIR}") {
-                    sh """
-                      docker build \
-                        -t ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:latest \
-                        -t ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:${IMAGE_TAG} .
-                    """
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_PASS'
+                    )]) {
+                        sh '''
+                          docker build \
+                            -t $DOCKERHUB_USER/$IMAGE_NAME:latest \
+                            -t $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG .
+                        '''
+                    }
                 }
             }
         }
-         stage('Trivy Scan') {
+
+        stage('Trivy Scan') {
             steps {
-                sh '''
-                  trivy image \
-                    --exit-code 1 \
-                    --severity CRITICAL \
-                    $DOCKERHUB_USER/$IMAGE_NAME:latest
-                '''
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                      trivy image \
+                        --exit-code 1 \
+                        --severity CRITICAL,HIGH \
+                        $DOCKERHUB_USER/$IMAGE_NAME:latest
+                    '''
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh """
-                  echo "${DOCKERHUB_CREDS_PSW}" | docker login \
-                    -u "${DOCKERHUB_CREDS_USR}" --password-stdin
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )]) {
+                    sh '''
+                      echo "$DOCKERHUB_PASS" | docker login \
+                        -u "$DOCKERHUB_USER" --password-stdin
 
-                  docker push ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:latest
-                  docker push ${DOCKERHUB_CREDS_USR}/${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                      docker push $DOCKERHUB_USER/$IMAGE_NAME:latest
+                      docker push $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG
+                    '''
+                }
             }
         }
     }
@@ -69,10 +90,10 @@ pipeline {
             sh 'docker logout || true'
         }
         success {
-            echo "Image pushed successfully"
+            echo "✅ CI pipeline completed successfully"
         }
         failure {
-            echo "Pipeline failed"
+            echo "❌ CI pipeline failed"
         }
     }
 }
